@@ -1,24 +1,24 @@
 # Summatif UASA Mission
 
 ## Current status
-- Project is a static HTML page in `PBSUMATIF.html`.
+- Project is a static HTML page in `index.html`.
 - GitHub remote exists: `https://github.com/azhandendi-sketch/summatif.git`.
-- `index.html` now redirects to `PBSUMATIF.html` so GitHub Pages can serve the site from the root.
-- A simple Node backend has been added to proxy Gemini requests safely.
+- `PBSUMATIF.html` was renamed to `index.html` so the app loads from the root.
+- A serverless backend function now proxies Gemini requests safely from `api/gemini.js`.
 
 ## Secure API key setup
-This project now keeps the Gemini API key on the server side in a `.env` file instead of inside browser JavaScript.
+This project now keeps the Gemini API key on the server side instead of inside browser JavaScript.
 
-### Files added
-- `server.js` — Node/Express backend proxy for Gemini.
-- `package.json` — Node package manifest.
-- `.gitignore` — ignores `node_modules/` and `.env`.
-- `.env.example` — example environment file.
+### Files in use
+- `package.json` — Node package manifest for Vercel.
+- `api/gemini.js` — serverless backend function for Gemini.
+- `.gitignore` — ignores `node_modules/`, `.env`, and `.vercel/`.
+- `.env.example` — example local environment file.
 
 ### Setup steps
-1. Install dependencies:
+1. Install the Vercel CLI if needed:
    ```bash
-   npm install
+   npm install -g vercel
    ```
 2. Create your local environment file:
    ```bash
@@ -27,31 +27,21 @@ This project now keeps the Gemini API key on the server side in a `.env` file in
 3. Open `.env` and set your Gemini key:
    ```text
    GEMINI_API_KEY=your_gemini_api_key_here
-   PORT=3000
    ```
-4. Start the server:
+4. Run the app locally with Vercel:
    ```bash
-   npm start
+   vercel dev
    ```
-5. Open the page in your browser:
-   `http://localhost:3000`
 
 ## How it works
-- The frontend now calls `/api/gemini` instead of embedding the API key in `PBSUMATIF.html`.
-- `server.js` forwards the request to the Gemini API using `process.env.GEMINI_API_KEY`.
+- The frontend calls `/api/gemini` from `index.html`.
+- `api/gemini.js` forwards the request to the Gemini API using `process.env.GEMINI_API_KEY`.
 - `.env` is ignored by Git so the key does not get committed.
 
 ## GitHub Pages note
-GitHub Pages can only host static sites. It cannot run the Node backend.
+GitHub Pages can only host static sites. It cannot run the backend function.
 
-If you want the static activity on GitHub Pages, keep using `index.html` and `PBSUMATIF.html` for publishing.
-
-If you want AI grading with the secure backend, deploy `server.js` on a node-capable host such as:
-- Railway
-- Render
-- Vercel (serverless functions)
-- Fly.io
-- Google Cloud Run
+If you want AI grading with the secure backend, deploy the backend to Vercel or another node-capable host and keep the frontend static.
 
 ## Vercel deployment (recommended)
 This project can be hosted entirely on Vercel, including both frontend and backend.
@@ -60,14 +50,13 @@ This project can be hosted entirely on Vercel, including both frontend and backe
 ```
 📁 your-github-repo
  ┣ 📄 index.html
- ┣ 📄 PBSUMATIF.html
  ┣ 📄 package.json
  ┗ 📁 api
    ┗ 📄 gemini.js
 ```
 
 ### How it works
-- Vercel serves `index.html` and `PBSUMATIF.html` as static site files.
+- Vercel serves `index.html` as the static site.
 - The backend is served by the serverless function at `/api/gemini`.
 - The frontend already points to `/api/gemini`, so no further endpoint changes are required.
 
@@ -85,21 +74,22 @@ If Vercel cannot detect a Node entrypoint, add `vercel.json` to force static hos
 - The `.env` file is for local development only and should not be committed.
 - On Vercel, the key is stored securely in project environment variables.
 
-### Local dev
+### Local development
 To test locally before deployment, use the Vercel CLI:
 ```bash
+
 npm install -g vercel
 vercel dev
 ```
 
 ## Split deployment: GitHub Pages + backend
 If you prefer to keep the frontend on GitHub Pages, you can do that too.
-- Host static files on GitHub Pages.
+- Host `index.html` as a static page on GitHub Pages.
 - Host the backend on Vercel or any Node-capable service.
-- Update `API_PROXY_ENDPOINT` in `PBSUMATIF.html` to the full backend URL when using a separate host.
+- Update `API_PROXY_ENDPOINT` in `index.html` to the full backend URL when using a separate host.
 
 ### Add the Dockerfile
-A `Dockerfile` is included in the repo. It builds the app and serves the static files from `server.js`.
+A `Dockerfile` is included in the repo. It builds the app and serves the static files from a Node server if you choose a container-based deployment.
 
 ### Deploy steps
 1. Install and authenticate the Google Cloud SDK.
