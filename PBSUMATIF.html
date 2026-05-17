@@ -1025,10 +1025,12 @@
             wrapper.style.left = '0';
             wrapper.style.width = '100%';
             wrapper.style.zIndex = '-1000';
-            wrapper.style.opacity = '0.01'; // Hampir tidak kelihatan tetapi wujud di dalam skrin
+            wrapper.style.opacity = '0.01';
             wrapper.style.pointerEvents = 'none';
+            wrapper.style.overflow = 'visible';
 
             const container = document.createElement('div');
+            container.style.display = 'block';
             container.style.width = '794px';
             container.style.maxWidth = '794px';
             container.style.margin = '0 auto';
@@ -1037,6 +1039,7 @@
             container.style.fontFamily = 'sans-serif';
             container.style.color = '#333';
             container.style.backgroundColor = '#ffffff';
+            container.style.minHeight = '1122px';
             container.style.pageBreakInside = 'avoid';
             container.style.breakInside = 'avoid';
             
@@ -1046,7 +1049,12 @@
             let totalScoreDisplay = document.getElementById('final-score-text') ? document.getElementById('final-score-text').innerText : '';
             
             let html = `
-                <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 20px; margin-bottom: 20px;">
+                <style>
+                    .pdf-block { page-break-inside: avoid; break-inside: avoid; }
+                    .pdf-section { margin-bottom: 20px; }
+                    .pdf-heading { page-break-after: avoid; }
+                </style>
+                <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 20px; margin-bottom: 20px;" class="pdf-heading">
                     <h1 style="color: #1e40af; margin: 0; font-size: 28px;">UASA Mathematics Assessment Report</h1>
                     <p style="font-size: 16px; color: #475569; margin: 10px 0 5px 0;"><b>Name:</b> ${studentName} &nbsp;|&nbsp; <b>Class:</b> ${studentClass}</p>
                     <h2 style="color: #eab308; margin: 10px 0 0 0;">Total Score: ${totalScoreDisplay}</h2>
@@ -1056,7 +1064,7 @@
             ['A', 'B'].forEach(sec => {
                 html += `<h3 style="background-color: #f3f4f6; padding: 10px; border-radius: 5px; color: #475569; margin-top: 20px;">Section ${sec}</h3>`;
                 questions[sec].forEach((q, i) => {
-                    html += `<div style="margin-bottom: 20px; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; page-break-inside: avoid; background-color: #fff;">`;
+                    html += `<div class="pdf-block" style="margin-bottom: 20px; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; background-color: #fff;">`;
                     html += `<p style="margin-top:0; font-weight: bold;">Question ${q.displayNum || (i + 1)}: ${q.text}</p>`;
 
                     // Include Main Diagram
@@ -1066,7 +1074,7 @@
 
                     if (q.subQuestions) {
                         q.subQuestions.forEach(sq => {
-                            html += `<div style="margin-top: 15px; padding-left: 15px; border-left: 3px solid #cbd5e1; page-break-inside: avoid;">`;
+                            html += `<div class="pdf-block" style="margin-top: 15px; padding-left: 15px; border-left: 3px solid #cbd5e1;">`;
                             html += `<p style="margin:0 0 5px 0; font-weight: 600;">(${sq.label}) ${sq.text}</p>`;
                             
                             // Include Sub-question Diagram
@@ -1088,7 +1096,7 @@
                             html += `</div>`;
                         });
                     } else {
-                        html += `<div style="margin-top: 15px; padding-left: 15px; border-left: 3px solid #cbd5e1; page-break-inside: avoid;">`;
+                        html += `<div class="pdf-block" style="margin-top: 15px; padding-left: 15px; border-left: 3px solid #cbd5e1;">`;
                         html += `<p style="margin: 5px 0;"><b>Student's Answer:</b> <span style="color: #2563eb;">${q.answer || '<i>No answer</i>'}</span></p>`;
                         html += `<p style="margin: 5px 0;"><b>Rubric:</b> <span style="color: #16a34a;">${q.skema || "None"}</span></p>`;
                         html += `<p style="margin: 5px 0;"><b>AI Feedback:</b> <span>${q.feedback || "None"}</span></p>`;
@@ -1109,7 +1117,7 @@
                 margin:       0.4,
                 filename:     finalFileName,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, windowWidth: 794, logging: false },
+                html2canvas:  { scale: 2, useCORS: true, windowWidth: 794, windowHeight: container.scrollHeight, logging: false, scrollY: 0 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak:    { mode: ['css', 'legacy'] }
             };
