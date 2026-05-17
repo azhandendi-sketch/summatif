@@ -53,34 +53,47 @@ If you want AI grading with the secure backend, deploy `server.js` on a node-cap
 - Fly.io
 - Google Cloud Run
 
-## Split deployment: GitHub Pages + backend
-Yes — you can split deployment.
-- Host the frontend static files (`index.html`, `PBSUMATIF.html`) on GitHub Pages.
-- Host the backend (`server.js`) separately on a node-capable service.
+## Vercel deployment (recommended)
+This project can be hosted entirely on Vercel, including both frontend and backend.
 
-In this mode:
-- GitHub Pages serves the static UI.
-- The backend handles Gemini calls securely.
-- The API key stays hidden on the server side.
-
-### No Docker needed for GitHub Pages
-- The frontend on GitHub Pages does not need Docker.
-- Only the backend needs a host that can run Node.
-- If you use Cloud Run, Docker is useful for the backend, but not for GitHub Pages.
-
-### How to update the frontend
-If your backend is deployed separately, change the API endpoint in `PBSUMATIF.html` from `/api/gemini` to the full backend URL, for example:
-```js
-const API_PROXY_ENDPOINT = 'https://your-cloud-run-url/a/pi/gemini';
+### Required project structure
+```
+📁 your-github-repo
+ ┣ 📄 index.html
+ ┣ 📄 PBSUMATIF.html
+ ┣ 📄 package.json
+ ┗ 📁 api
+   ┗ 📄 gemini.js
 ```
 
-### What happens to your undeployed backend
-- It can remain undeployed locally while your frontend is on GitHub Pages.
-- The frontend will only work with AI grading if it can reach the deployed backend.
-- You can still publish the static site first and deploy the backend later.
+### How it works
+- Vercel serves `index.html` and `PBSUMATIF.html` as static site files.
+- The backend is served by the serverless function at `/api/gemini`.
+- The frontend already points to `/api/gemini`, so no further endpoint changes are required.
 
-## Google Cloud Run deployment
-This project already has a Node backend and static assets in the same folder, so Cloud Run is a good option to host both together.
+### Deploying to Vercel
+1. Push your repository to GitHub.
+2. Connect the repo to Vercel.
+3. In Vercel project settings, add an environment variable:
+   - `GEMINI_API_KEY` = your Gemini API key
+4. Deploy.
+
+### Important
+- The `.env` file is for local development only and should not be committed.
+- On Vercel, the key is stored securely in project environment variables.
+
+### Local dev
+To test locally before deployment, use the Vercel CLI:
+```bash
+npm install -g vercel
+vercel dev
+```
+
+## Split deployment: GitHub Pages + backend
+If you prefer to keep the frontend on GitHub Pages, you can do that too.
+- Host static files on GitHub Pages.
+- Host the backend on Vercel or any Node-capable service.
+- Update `API_PROXY_ENDPOINT` in `PBSUMATIF.html` to the full backend URL when using a separate host.
 
 ### Add the Dockerfile
 A `Dockerfile` is included in the repo. It builds the app and serves the static files from `server.js`.
