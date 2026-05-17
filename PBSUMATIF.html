@@ -1117,49 +1117,88 @@
                 margin:       0.4,
                 filename:     finalFileName,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, windowWidth: 794, windowHeight: container.scrollHeight, logging: false, scrollY: 0 },
+                html2canvas:  { scale: 2, useCORS: true, windowWidth: 794, windowHeight: container.scrollHeight, logging: false, scrollY: 0, allowTaint: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak:    { mode: ['css', 'legacy'] }
             };
 
-            // FIX: Tambahkan masa 2 saat supaya pelayar web dapat menangkap semua saiz gambar Google Drive sebelum fail PDF dicetak.
-            setTimeout(() => {
-                html2pdf().set(opt).from(container).outputPdf('datauristring').then(function(pdfBase64) {
-                    document.body.removeChild(wrapper); // Bersihkan DOM
-                    
-                    const appScriptUrl = 'https://script.google.com/macros/s/AKfycbxzrOurlJtMGQVhdV_VSZHyrt8VSYCMQgAL07kerFv01SSiD1Fu3GDFbyo1tMuRsP21/exec';
+            // Preload all images before PDF generation
+            loadingText.innerText = "Loading images for PDF...";
+            const images = container.querySelectorAll('img');
+            let loadedCount = 0;
+            let totalImages = images.length;
 
-                    loadingText.innerText = "Flying file to Google Drive...";
-                    
-                    fetch(appScriptUrl, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            filename: finalFileName,
-                            base64: pdfBase64,
-                            folderId: targetFolderId // Send Folder ID to Apps Script
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        loading.classList.add('hidden');
-                        if (data.status === "success") {
-                            showModal("Delivery Successful!", "Your PDF report has safely landed in the class Google Drive.", "info");
-                        } else {
-                            showModal("Delivery Error", "Sorry, landing failed: " + data.message, "error");
+            if (totalImages === 0) {
+                // No images, generate PDF immediately
+                generatePDF();
+            } else {
+                images.forEach(img => {
+                    const imgSrc = img.src;
+                    if (imgSrc) {
+                        const tempImg = new Image();
+                        tempImg.crossOrigin = 'anonymous';
+                        tempImg.onload = () => {
+                            loadedCount++;
+                            if (loadedCount === totalImages) {
+                                generatePDF();
+                            }
+                        };
+                        tempImg.onerror = () => {
+                            loadedCount++;
+                            if (loadedCount === totalImages) {
+                                generatePDF();
+                            }
+                        };
+                        tempImg.src = imgSrc;
+                    } else {
+                        loadedCount++;
+                        if (loadedCount === totalImages) {
+                            generatePDF();
                         }
-                    })
-                    .catch(e => {
+                    }
+                });
+            }
+
+            function generatePDF() {
+                loadingText.innerText = "Generating PDF Report...";
+                setTimeout(() => {
+                    html2pdf().set(opt).from(container).outputPdf('datauristring').then(function(pdfBase64) {
+                        document.body.removeChild(wrapper); // Bersihkan DOM
+                        
+                        const appScriptUrl = 'https://script.google.com/macros/s/AKfycbxzrOurlJtMGQVhdV_VSZHyrt8VSYCMQgAL07kerFv01SSiD1Fu3GDFbyo1tMuRsP21/exec';
+
+                        loadingText.innerText = "Flying file to Google Drive...";
+                        
+                        fetch(appScriptUrl, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                filename: finalFileName,
+                                base64: pdfBase64,
+                                folderId: targetFolderId // Send Folder ID to Apps Script
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            loading.classList.add('hidden');
+                            if (data.status === "success") {
+                                showModal("Delivery Successful!", "Your PDF report has safely landed in the class Google Drive.", "info");
+                            } else {
+                                showModal("Delivery Error", "Sorry, landing failed: " + data.message, "error");
+                            }
+                        })
+                        .catch(e => {
+                            console.error(e);
+                            loading.classList.add('hidden');
+                            showModal("Server Error", "Failed to contact Google Drive system. Please try again later.", "error");
+                        });
+                    }).catch(e => {
+                        document.body.removeChild(wrapper); // Bersihkan jika gagal
                         console.error(e);
                         loading.classList.add('hidden');
-                        showModal("Server Error", "Failed to contact Google Drive system. Please try again later.", "error");
+                        showModal("PDF Error", "Failed to generate PDF document.", "error");
                     });
-                }).catch(e => {
-                    document.body.removeChild(wrapper); // Bersihkan jika gagal
-                    console.error(e);
-                    loading.classList.add('hidden');
-                    showModal("PDF Error", "Failed to generate PDF document.", "error");
-                });
-            }, 2000);
+                }, 1000);
+            }
         }
 
         async function callGeminiAPI(prompt, base64Data = null) {
