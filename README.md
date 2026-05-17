@@ -53,6 +53,32 @@ If you want AI grading with the secure backend, deploy `server.js` on a node-cap
 - Fly.io
 - Google Cloud Run
 
+## Split deployment: GitHub Pages + backend
+Yes — you can split deployment.
+- Host the frontend static files (`index.html`, `PBSUMATIF.html`) on GitHub Pages.
+- Host the backend (`server.js`) separately on a node-capable service.
+
+In this mode:
+- GitHub Pages serves the static UI.
+- The backend handles Gemini calls securely.
+- The API key stays hidden on the server side.
+
+### No Docker needed for GitHub Pages
+- The frontend on GitHub Pages does not need Docker.
+- Only the backend needs a host that can run Node.
+- If you use Cloud Run, Docker is useful for the backend, but not for GitHub Pages.
+
+### How to update the frontend
+If your backend is deployed separately, change the API endpoint in `PBSUMATIF.html` from `/api/gemini` to the full backend URL, for example:
+```js
+const API_PROXY_ENDPOINT = 'https://your-cloud-run-url/a/pi/gemini';
+```
+
+### What happens to your undeployed backend
+- It can remain undeployed locally while your frontend is on GitHub Pages.
+- The frontend will only work with AI grading if it can reach the deployed backend.
+- You can still publish the static site first and deploy the backend later.
+
 ## Google Cloud Run deployment
 This project already has a Node backend and static assets in the same folder, so Cloud Run is a good option to host both together.
 
