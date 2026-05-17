@@ -78,6 +78,9 @@ This project can be hosted entirely on Vercel, including both frontend and backe
    - `GEMINI_API_KEY` = your Gemini API key
 4. Deploy.
 
+### Vercel config note
+If Vercel cannot detect a Node entrypoint, add `vercel.json` to force static hosting for HTML and `@vercel/node` for the API function.
+
 ### Important
 - The `.env` file is for local development only and should not be committed.
 - On Vercel, the key is stored securely in project environment variables.
